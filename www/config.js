@@ -13,5 +13,5 @@ window.VG_CONFIG = {
   revenuecat: { android: '', ios: '' },   // public SDK keys from RevenueCat
   entitlement: 'no_ads',                   // entitlement id you create in RevenueCat
   webDemoAds: false,                        // web version: no ad placeholders, free revive
-  shareUrl: ''                             // your store link, shown on share images and used for Facebook
+  shareUrl: 'https://car-rocket.netlify.app/'                             // your store link, shown on share images and used for Facebook
 };
