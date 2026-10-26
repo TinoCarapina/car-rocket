@@ -1,0 +1,7 @@
+{
+  "appId": "com.voltglide.app",
+  "appName": "Car Rocket",
+  "webDir": "www",
+  "backgroundColor": "#0b1326",
+  "server": { "androidScheme": "https" }
+}
