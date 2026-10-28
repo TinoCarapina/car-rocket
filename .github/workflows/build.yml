@@ -8,6 +8,8 @@ permissions:
 jobs:
   apk:
     runs-on: ubuntu-latest
+    env:
+      KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -21,16 +23,33 @@ jobs:
       - run: npm run setup
       - name: Accept Android SDK licenses
         run: yes | "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --licenses > /dev/null || true
-      - name: Build APK
+      - name: Build APK (for sharing)
         working-directory: android
         run: |
           chmod +x gradlew
           ./gradlew assembleDebug
       - run: cp android/app/build/outputs/apk/debug/app-debug.apk car-rocket.apk
+      - name: Build signed AAB (for Google Play)
+        if: env.KEYSTORE_BASE64 != ''
+        working-directory: android
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          VERSION_CODE: ${{ github.run_number }}
+        run: |
+          echo "$KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/upload.jks"
+          export KEYSTORE_PATH="$RUNNER_TEMP/upload.jks"
+          ./gradlew bundleRelease
       - uses: actions/upload-artifact@v4
         with:
           name: car-rocket-apk
           path: car-rocket.apk
+      - uses: actions/upload-artifact@v4
+        if: env.KEYSTORE_BASE64 != ''
+        with:
+          name: car-rocket-aab-for-google-play
+          path: android/app/build/outputs/bundle/release/app-release.aab
       - uses: softprops/action-gh-release@v2
         with:
           tag_name: build-${{ github.run_number }}
