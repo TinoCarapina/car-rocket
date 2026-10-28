@@ -20,7 +20,7 @@ edit('ios/App/App/Info.plist', x => {
 // Signed release bundle (.aab) for Google Play: reads the upload key from environment variables set by the GitHub workflow.
 edit('android/app/build.gradle', x => {
   if (x.includes('KEYSTORE_PATH')) return x;
-  x = x.replace('versionCode 1', 'versionCode (System.getenv("VERSION_CODE") ?: "1").toInteger()');
+  x = x.replace('versionCode 1', 'versionCode Integer.parseInt(System.getenv("VERSION_CODE") ?: "1")');
   x = x.replace('    buildTypes {\n        release {\n            minifyEnabled false',
 `    signingConfigs {
         release {
