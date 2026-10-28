@@ -16,3 +16,26 @@ edit('ios/App/App/Info.plist', x => {
   x = x.replace(/(<key>UISupportedInterfaceOrientations<\/key>\s*<array>)[\s\S]*?(<\/array>)/, '$1\n\t\t<string>UIInterfaceOrientationPortrait</string>\n\t$2');
   return x;
 });
+
+// Signed release bundle (.aab) for Google Play: reads the upload key from environment variables set by the GitHub workflow.
+edit('android/app/build.gradle', x => {
+  if (x.includes('KEYSTORE_PATH')) return x;
+  x = x.replace('versionCode 1', 'versionCode (System.getenv("VERSION_CODE") ?: "1").toInteger()');
+  x = x.replace('    buildTypes {\n        release {\n            minifyEnabled false',
+`    signingConfigs {
+        release {
+            if (System.getenv("KEYSTORE_PATH")) {
+                storeFile file(System.getenv("KEYSTORE_PATH"))
+                storePassword System.getenv("KEYSTORE_PASSWORD")
+                keyAlias System.getenv("KEY_ALIAS")
+                keyPassword System.getenv("KEY_PASSWORD")
+            }
+        }
+    }
+    buildTypes {
+        release {
+            if (System.getenv("KEYSTORE_PATH")) { signingConfig signingConfigs.release }
+            minifyEnabled false`);
+  if (!x.includes('signingConfigs')) console.warn('WARNING: could not add signing config to build.gradle');
+  return x;
+});
